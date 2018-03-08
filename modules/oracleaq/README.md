@@ -3,14 +3,14 @@
 ## TransportReceiver:
 ```xml
 <transportReceiver name="oracleaq" class="org.apache.axis2.transport.oracleaq.OracleAQListener">
-        <parameter name="ERPConnectionFactory" locked="false">
-    	    <parameter name="java.naming.factory.initial" locked="false">oracle.jms.AQjmsInitialContextFactory</parameter>
-    	    <parameter name="transport.oracleaq.ConnectionFactoryJNDIName" locked="false">TopicConnectionFactory</parameter>
-    	    <parameter name="db_url" locked="false">jdbc:oracle:thin:@HOST:PORT/DB</parameter>
-    	    <parameter name="java.naming.security.principal" locked="false">USER</parameter>
-    	    <parameter name="java.naming.security.credentials" locked="false">PASS</parameter>
-        </parameter>
-    </transportReceiver>
+    <parameter name="ERPConnectionFactory" locked="false">
+        <parameter name="java.naming.factory.initial" locked="false">oracle.jms.AQjmsInitialContextFactory</parameter>
+    	<parameter name="transport.oracleaq.ConnectionFactoryJNDIName" locked="false">TopicConnectionFactory</parameter>
+    	<parameter name="db_url" locked="false">jdbc:oracle:thin:@HOST:PORT/DB</parameter>
+    	<parameter name="java.naming.security.principal" locked="false">USER</parameter>
+    	<parameter name="java.naming.security.credentials" locked="false">PASS</parameter>
+    </parameter>
+</transportReceiver>
 ```
 
 ## Service:
