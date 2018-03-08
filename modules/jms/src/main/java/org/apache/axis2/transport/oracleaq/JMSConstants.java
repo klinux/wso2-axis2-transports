@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.apache.axis2.transport.oracleaq;
+package org.apache.axis2.transport.jms;
 
 import org.apache.axis2.client.Options;
 
@@ -24,7 +24,7 @@ public class JMSConstants {
     /**
      * The prefix indicating an Axis JMS URL
      */
-    public static final String JMS_PREFIX = "oracleaq:/";
+    public static final String JMS_PREFIX = "jms:/";
 
     //------------------------------------ defaults / constants ------------------------------------
     /**
@@ -73,50 +73,50 @@ public class JMSConstants {
     /**
      * The EPR parameter name indicating the name of the message level property that indicated the content type.
      */
-    public static final String CONTENT_TYPE_PROPERTY_PARAM = "transport.oracleaq.ContentTypeProperty";
+    public static final String CONTENT_TYPE_PROPERTY_PARAM = "transport.jms.ContentTypeProperty";
 
     //---------------------------------- services.xml parameters -----------------------------------
     /**
      * The Service level Parameter name indicating the JMS destination for requests of a service
      */
-    public static final String PARAM_DESTINATION = "transport.oracleaq.Destination";
+    public static final String PARAM_DESTINATION = "transport.jms.Destination";
     /**
      * The Service level Parameter name indicating the destination type for requests.
      * also see {@link DESTINATION_TYPE_QUEUE}, {@link DESTINATION_TYPE_TOPIC}
      */
-    public static final String PARAM_DEST_TYPE = "transport.oracleaq.DestinationType";
+    public static final String PARAM_DEST_TYPE = "transport.jms.DestinationType";
     /**
      * The Service level Parameter name indicating the [default] response destination of a service
      */
-    public static final String PARAM_REPLY_DESTINATION = "transport.oracleaq.ReplyDestination";
+    public static final String PARAM_REPLY_DESTINATION = "transport.jms.ReplyDestination";
     /**
      * The Service level Parameter name indicating the response destination type
      * also see {@link DESTINATION_TYPE_QUEUE}, {@link DESTINATION_TYPE_TOPIC}
      */
-    public static final String PARAM_REPLY_DEST_TYPE = "transport.oracleaq.ReplyDestinationType";
+    public static final String PARAM_REPLY_DEST_TYPE = "transport.jms.ReplyDestinationType";
     /**
      * The Parameter name of an Axis2 service, indicating the JMS connection
      * factory which should be used to listen for messages for it. This is
      * the local (Axis2) name of the connection factory and not the JNDI name
      */
-    public static final String PARAM_JMS_CONFAC = "transport.oracleaq.ConnectionFactory";
+    public static final String PARAM_JMS_CONFAC = "transport.jms.ConnectionFactory";
     /**
      * Connection factory type if using JMS 1.0, either DESTINATION_TYPE_QUEUE or DESTINATION_TYPE_TOPIC
      */
-    public static final String PARAM_CONFAC_TYPE = "transport.oracleaq.ConnectionFactoryType";
+    public static final String PARAM_CONFAC_TYPE = "transport.jms.ConnectionFactoryType";
     /**
      * The Parameter name indicating the JMS connection factory JNDI name
      */
-    public static final String PARAM_CONFAC_JNDI_NAME = "transport.oracleaq.ConnectionFactoryJNDIName";
+    public static final String PARAM_CONFAC_JNDI_NAME = "transport.jms.ConnectionFactoryJNDIName";
 	/**
 	 * Duration in milliseconds to try reconnecting when the MQ is
 	 * down(shutdown)
 	 */
-	public static final String PARAM_RECONNECT_INTERVAL = "transport.oracleaq.ReconnectInterval";
+	public static final String PARAM_RECONNECT_INTERVAL = "transport.jms.ReconnectInterval";     
     /**
      * The Parameter indicating the expected content type for messages received by the service.
      */
-    public static final String CONTENT_TYPE_PARAM = "transport.oracleaq.ContentType";
+    public static final String CONTENT_TYPE_PARAM = "transport.jms.ContentType";
     /**
      * The Parameter indicating a final EPR as a String, to be published on the WSDL of a service
      * Could occur more than once, and could provide additional connection properties or a subset
@@ -126,94 +126,94 @@ public class JMSConstants {
      * This parameter could be used to expose EPR's conforming to the proposed SOAP/JMS spec
      * until such time full support is implemented for it.
      */
-    public static final String PARAM_PUBLISH_EPR = "transport.oracleaq.PublishEPR";
+    public static final String PARAM_PUBLISH_EPR = "transport.jms.PublishEPR";
     /** The parameter indicating the JMS API specification to be used - if this is "1.1" the JMS
      * 1.1 API would be used, else the JMS 1.0.2B
      */
-    public static final String PARAM_JMS_SPEC_VER = "transport.oracleaq.JMSSpecVersion";
+    public static final String PARAM_JMS_SPEC_VER = "transport.jms.JMSSpecVersion";
 
     /**
      * The Parameter indicating whether the JMS Session should be transacted for the service
      * Specified as a "true" or "false"
      */
-    public static final String PARAM_SESSION_TRANSACTED = "transport.oracleaq.SessionTransacted";
+    public static final String PARAM_SESSION_TRANSACTED = "transport.jms.SessionTransacted";
     /**
      * The Parameter indicating the Session acknowledgement for the service. Must be one of the
      * following Strings, or the appropriate Integer used by the JMS API
      * "AUTO_ACKNOWLEDGE", "CLIENT_ACKNOWLEDGE", "DUPS_OK_ACKNOWLEDGE" or "SESSION_TRANSACTED"
      */
-    public static final String PARAM_SESSION_ACK = "transport.oracleaq.SessionAcknowledgement";
+    public static final String PARAM_SESSION_ACK = "transport.jms.SessionAcknowledgement";
     /** A message selector to be used when messages are sought for this service */
-    public static final String PARAM_MSG_SELECTOR = "transport.oracleaq.MessageSelector";
+    public static final String PARAM_MSG_SELECTOR = "transport.jms.MessageSelector";
     /** Is the Subscription durable ? - "true" or "false" See {@link PARAM_DURABLE_SUB_NAME} */
-    public static final String PARAM_SUB_DURABLE = "transport.oracleaq.SubscriptionDurable";
+    public static final String PARAM_SUB_DURABLE = "transport.jms.SubscriptionDurable";
     /** The name for the durable subscription See {@link PARAM_SUB_DURABLE}*/
-    public static final String PARAM_DURABLE_SUB_NAME = "transport.oracleaq.DurableSubscriberName";
+    public static final String PARAM_DURABLE_SUB_NAME = "transport.jms.DurableSubscriberName";
     /**
      * JMS Resource cachable level to be used for the service One of the following:
      * {@link CACHE_NONE}, {@link CACHE_CONNECTION}, {@link CACHE_SESSION}, {@link CACHE_PRODUCER},
      * {@link CACHE_CONSUMER}, or {@link CACHE_AUTO} - to let the transport decide
      */
-    public static final String PARAM_CACHE_LEVEL = "transport.oracleaq.CacheLevel";
+    public static final String PARAM_CACHE_LEVEL = "transport.jms.CacheLevel";
     /** Should a pub-sub connection receive messages published by itself? */
-    public static final String PARAM_PUBSUB_NO_LOCAL = "transport.oracleaq.PubSubNoLocal";
+    public static final String PARAM_PUBSUB_NO_LOCAL = "transport.jms.PubSubNoLocal";
     /**
      * The number of milliseconds to wait for a message on a consumer.receive() call
      * negative number - wait forever
      * 0 - do not wait at all
      * positive number - indicates the number of milliseconds to wait
      */
-    public static final String PARAM_RCV_TIMEOUT = "transport.oracleaq.ReceiveTimeout";
+    public static final String PARAM_RCV_TIMEOUT = "transport.jms.ReceiveTimeout";
     /**
      * Delay on consume errors.
      */
-    public static final String PARAM_CONSUME_ERROR_DELAY = "transport.oracleaq.ConsumeErrorDelay";
+    public static final String PARAM_CONSUME_ERROR_DELAY = "transport.jms.ConsumeErrorDelay";
     /**
      * Progression factor on consume errors.
      */
-    public static final String PARAM_CONSUME_ERROR_PROGRESSION = "transport.oracleaq.ConsumeErrorProgression";
+    public static final String PARAM_CONSUME_ERROR_PROGRESSION = "transport.jms.ConsumeErrorProgression";
     /**
      * Maximum retries on consume error before delay kicks in.
      */
-    public static final String PARAM_MAX_CONSUME_RETRY_BEFORE_DELAY = "transport.oracleaq.MaxConsumeErrorRetriesBeforeDelay";
+    public static final String PARAM_MAX_CONSUME_RETRY_BEFORE_DELAY = "transport.jms.MaxConsumeErrorRetriesBeforeDelay";
     /**
      *The number of concurrent consumers to be created to poll for messages for this service
      * For Topics, this should be ONE, to prevent receipt of multiple copies of the same message
      */
-    public static final String PARAM_CONCURRENT_CONSUMERS = "transport.oracleaq.ConcurrentConsumers";
+    public static final String PARAM_CONCURRENT_CONSUMERS = "transport.jms.ConcurrentConsumers";
     /**
      * The maximum number of concurrent consumers for the service - See {@link PARAM_CONCURRENT_CONSUMERS}
      */
-    public static final String PARAM_MAX_CONSUMERS = "transport.oracleaq.MaxConcurrentConsumers";
+    public static final String PARAM_MAX_CONSUMERS = "transport.jms.MaxConcurrentConsumers";
     /**
      * The number of idle (i.e. message-less) polling attempts before a worker task commits suicide,
      * to scale down resources, as load decreases
      */
-    public static final String PARAM_IDLE_TASK_LIMIT = "transport.oracleaq.IdleTaskLimit";
+    public static final String PARAM_IDLE_TASK_LIMIT = "transport.jms.IdleTaskLimit";
     /**
      * The maximum number of messages a polling worker task should process, before suicide - to
      * prevent many longer running threads - default is unlimited (i.e. a worker task will live forever)
      */
-    public static final String PARAM_MAX_MSGS_PER_TASK = "transport.oracleaq.MaxMessagesPerTask";
+    public static final String PARAM_MAX_MSGS_PER_TASK = "transport.jms.MaxMessagesPerTask";
     /**
      * Number of milliseconds before the first reconnection attempt is tried, on detection of an
      * error. Subsequent retries follow a geometric series, where the
      * duration = previous duration * factor
      * This is further limited by the {@link PARAM_RECON_MAX_DURATION} to be meaningful
      */
-    public static final String PARAM_RECON_INIT_DURATION = "transport.oracleaq.InitialReconnectDuration";
+    public static final String PARAM_RECON_INIT_DURATION = "transport.jms.InitialReconnectDuration";
     /** @see PARAM_RECON_INIT_DURATION */
-    public static final String PARAM_RECON_FACTOR = "transport.oracleaq.ReconnectProgressFactor";
+    public static final String PARAM_RECON_FACTOR = "transport.jms.ReconnectProgressFactor";
     /** @see PARAM_RECON_INIT_DURATION */
-    public static final String PARAM_RECON_MAX_DURATION = "transport.oracleaq.MaxReconnectDuration";
+    public static final String PARAM_RECON_MAX_DURATION = "transport.jms.MaxReconnectDuration";
 
     /** The username to use when obtaining a JMS Connection */
-    public static final String PARAM_JMS_USERNAME = "transport.oracleaq.UserName";
+    public static final String PARAM_JMS_USERNAME = "transport.jms.UserName";
     /** The password to use when obtaining a JMS Connection */
-    public static final String PARAM_JMS_PASSWORD = "transport.oracleaq.Password";
+    public static final String PARAM_JMS_PASSWORD = "transport.jms.Password";
 
      public static final String PARAM_DURABLE_SUB_CLIENT_ID =
-            "transport.oracleaq.DurableSubscriberClientID";
+            "transport.jms.DurableSubscriberClientID";
 
     //-------------- message context / transport header properties and client options --------------
     /**
@@ -246,8 +246,8 @@ public class JMSConstants {
     public static final String JMS_MESSAGE_ID = "JMS_MESSAGE_ID";
     /**
      * A MessageContext property or client Option indicating the JMS delivery mode as an Integer or String
-     * Value 1 - javax.oracleaq.DeliveryMode.NON_PERSISTENT
-     * Value 2 - javax.oracleaq.DeliveryMode.PERSISTENT
+     * Value 1 - javax.jms.DeliveryMode.NON_PERSISTENT
+     * Value 2 - javax.jms.DeliveryMode.PERSISTENT
      */
     public static final String JMS_DELIVERY_MODE = "JMS_DELIVERY_MODE";
     /**
@@ -297,7 +297,7 @@ public class JMSConstants {
     public static final String JMSX_GROUP_SEQ = "JMSXGroupSeq";
 
     /**Namespace for JMS map payload representation*/
-    public static final String JMS_MAP_NS = "http://axis.apache.org/axis2/java/transports/oracleaq/map-payload";
+    public static final String JMS_MAP_NS = "http://axis.apache.org/axis2/java/transports/jms/map-payload";
 
     /**Root element name of JMS Map message payload representation */
     public static final String JMS_MAP_ELEMENT_NAME = "JMSMap";
@@ -343,12 +343,12 @@ public class JMSConstants {
     /**
       * Maximum number of shared JMS Connections when sending messages out
       * */
-     public static final String MAX_JMS_CONNECTIONS_ = "transport.oracleaq.MaxJMSConnections";
+     public static final String MAX_JMS_CONNECTIONS_ = "transport.jms.MaxJMSConnections";
 
     /**
      * Does the JMS broker support hyphen in JMS message property names.
      */
-    public static final String PARAM_JMS_HYPHEN_MODE = "transport.oracleaq.MessagePropertyHyphens";
+    public static final String PARAM_JMS_HYPHEN_MODE = "transport.jms.MessagePropertyHyphens";
 
     public static final String HYPHEN_MODE_NONE = "none";
 
@@ -365,9 +365,9 @@ public class JMSConstants {
      */
     public static final String JMS_MESSAGE_DELAY = "JMS_MESSAGE_DELAY";
 
-    public static final String JMS_SPEC_VERSION = "transport.oracleaq.JMSSpecVersion";
+    public static final String JMS_SPEC_VERSION = "transport.jms.JMSSpecVersion";
 
-    public static final String JMS_XA_TRANSACTION_PREFIX = "wso2-oracleaq-xa-transaction";
+    public static final String JMS_XA_TRANSACTION_PREFIX = "wso2-jms-xa-transaction";
 
     public static final String JMS_XA_TRANSACTION = "distributedTx";
 
@@ -379,15 +379,15 @@ public class JMSConstants {
 
     public static final String JMS_SPEC_VERSION_1_0 = "1.0.2b";
 
-    public static final String PARAM_IS_SHARED_SUBSCRIPTION = "transport.oracleaq.SharedSubscription";
+    public static final String PARAM_IS_SHARED_SUBSCRIPTION = "transport.jms.SharedSubscription";
 
-    public static final String DELIVERY_COUNT = "oracleaq.message.delivery.count";
+    public static final String DELIVERY_COUNT = "jms.message.delivery.count";
 
     public static final String JMS_MESSAGE_DELIVERY_COUNT_HEADER = "JMSXDeliveryCount";
 
 
     /**
-     * Parameter for jndi security credentials in oracleaq configs of axis2.xml
+     * Parameter for jndi security credentials in jms configs of axis2.xml
      */
     public static final String PARAM_NAMING_SECURITY_CREDENTIALS = "java.naming.security.credentials";
 }

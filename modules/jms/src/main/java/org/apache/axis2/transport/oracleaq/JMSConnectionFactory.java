@@ -15,12 +15,15 @@
 */
 package org.apache.axis2.transport.oracleaq;
 
+import org.apache.axiom.om.OMAttribute;
 import org.apache.axiom.om.OMElement;
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.description.ParameterIncludeImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.securevault.SecretResolver;
+import org.wso2.securevault.SecureVaultException;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -34,6 +37,7 @@ import javax.jms.Session;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
+import javax.xml.namespace.QName;
 
 /**
  * Encapsulate a JMS Connection factory definition within an Axis2.xml
@@ -73,9 +77,10 @@ public class JMSConnectionFactory {
     private int lastReturnedConnectionIndex = 0;
 
     /**
-     * Digest a JMS CF definition from an axis2.xml 'Parameter' and construct
+     * Digest a JMS CF definition from an axis2.xml 'Parameter' and construct.
      * @param parameter the axis2.xml 'Parameter' that defined the JMS CF
      */
+    @Deprecated
     public JMSConnectionFactory(Parameter parameter) {
 
         this.name = parameter.getName();
@@ -92,6 +97,59 @@ public class JMSConnectionFactory {
             parameters.put(p.getName(), (String) p.getValue());
         }
 
+        digestCacheLevel();
+        try {
+            context = new InitialContext(parameters);
+            conFactory = JMSUtils.lookup(context, ConnectionFactory.class,
+                    parameters.get(JMSConstants.PARAM_CONFAC_JNDI_NAME));
+            if (parameters.get(JMSConstants.PARAM_DESTINATION) != null) {
+                sharedDestination = JMSUtils.lookup(context, Destination.class,
+                        parameters.get(JMSConstants.PARAM_DESTINATION));
+            }
+            log.info("JMS ConnectionFactory : " + name + " initialized");
+
+        } catch (NamingException e) {
+            throw new AxisJMSException("Cannot acquire JNDI context, JMS Connection factory : " +
+                    parameters.get(JMSConstants.PARAM_CONFAC_JNDI_NAME) + " or default destination : " +
+                    parameters.get(JMSConstants.PARAM_DESTINATION) +
+                    " for JMS CF : " + name + " using : " + JMSUtils.maskAxis2ConfigSensitiveParameters(parameters), e);
+        }
+        setMaxSharedJMSConnectionsCount();
+    }
+
+    /**
+     * Digest a JMS CF definition from an axis2.xml 'Parameter' and construct.
+     * @param parameter the axis2.xml 'Parameter' that defined the JMS CF
+     * @param secretResolver the SecretResolver to use to resolve secrets such as passwords
+     */
+    public JMSConnectionFactory(Parameter parameter, SecretResolver secretResolver) {
+        this.name = parameter.getName();
+        ParameterIncludeImpl pi = new ParameterIncludeImpl();
+
+        try {
+            pi.deserializeParameters((OMElement) parameter.getValue());
+        } catch (AxisFault axisFault) {
+            handleException("Error reading parameters for JMS connection factory" + name, axisFault);
+        }
+
+        for (Parameter param : pi.getParameters()) {
+            OMElement paramElement = param.getParameterElement();
+            String propertyValue = param.getValue().toString();
+            if (paramElement != null) {
+                OMAttribute attribute = paramElement.getAttribute(JMSConstants.ALIAS_QNAME);
+                if (attribute != null && attribute.getAttributeValue() != null
+                        && !attribute.getAttributeValue().isEmpty()) {
+                    if (secretResolver == null) {
+                        throw new SecureVaultException("Axis2 Secret Resolver is null. "
+                                + "Cannot resolve encrypted entry for " + param.getName());
+                    }
+                    if (secretResolver.isTokenProtected(attribute.getAttributeValue())) {
+                        propertyValue = secretResolver.resolve(attribute.getAttributeValue());
+                    }
+                }
+            }
+            parameters.put(param.getName(), propertyValue);
+        }
         digestCacheLevel();
         try {
             context = new InitialContext(parameters);

@@ -141,6 +141,11 @@ public class ServiceTaskManager {
      * Number of consume retries upon consume error.
      */
     private int consumerRetryCount = 0;
+    /**
+     * Maximum consumer retries on consume error: after this value is reached a manual Connection exception will be
+     * thrown.
+     */
+    private Integer maxConsumerErrorRetryCount = -1; // default is -1
     /** Upper limit on reconnection attempt duration */
     private long maxReconnectDuration = 1000 * 60 * 1; // 1 min
 	/** Reconnect duration in case of a failure */
@@ -330,13 +335,10 @@ public class ServiceTaskManager {
      * Start a new MessageListenerTask if we are still active, the threshold is not reached, and w
      * e do not have any idle tasks - i.e. scale up listening
      */
-    private void scheduleNewTaskIfAppropriate() {
+    public void scheduleNewTaskIfAppropriate() {
         if (serviceTaskManagerState == STATE_STARTED &&
-            pollingTasks.size() < getMaxConcurrentConsumers() && getIdleTaskCount() == 0) {
-
-            if (jmsMessageReceiver.getJmsListener().getState() == BaseConstants.PAUSED) {
-                workerPool.execute(new MessageListenerTask(BaseConstants.PAUSED));
-            } else {
+                pollingTasks.size() < getMaxConcurrentConsumers() && getIdleTaskCount() == 0) {
+            if (jmsMessageReceiver.getJmsListener().getState() != BaseConstants.PAUSED) {
                 workerPool.execute(new MessageListenerTask(BaseConstants.STARTED));
             }
         }
@@ -456,6 +458,8 @@ public class ServiceTaskManager {
                 workerState = STATE_PAUSED;
             }
 
+            log.info("JMS Polling task activated with state: " + workerState + " for service " + serviceName);
+
             try {
                 while (isActive() &&
                     (getMaxMessagesPerTask() < 0 || messageCount < getMaxMessagesPerTask()) &&
@@ -491,7 +495,14 @@ public class ServiceTaskManager {
                                 Thread.currentThread().getId() + " for destination : " + destination);
                         }
                     }
-
+                    if (maxConsumerErrorRetryCount != -1 && consumerRetryCount > maxConsumerErrorRetryCount) {
+                        log.warn("Creating a Forced Error Recovery task for Connection level recovery "
+                                + "for the service : " + serviceName);
+                        ErrorRecoverTask errorRecoverTask = new ErrorRecoverTask(this);
+                        Thread errorRecoverThread = new Thread(errorRecoverTask);
+                        errorRecoverThread.setName("JMSForcedErrorRecoveryThread-" + errorRecoverThread.getId());
+                        errorRecoverThread.start();
+                    }
                     if (connectionReceivedError && (maxConsumeErrorRetryBeforeDelay < consumerRetryCount)) {
                         try {
                             Thread.sleep(retryDurationOnConsumerFailure);
@@ -519,10 +530,10 @@ public class ServiceTaskManager {
                         idleExecutionCount++;
                     }
                 }
-			} catch (AxisJMSException e) {
-				log.error("Error reciving the message.");
+            } catch (AxisJMSException e) {
+                log.error("Error receiving the message.");
             } finally {
-                
+                log.info("JMS Polling server task stopped for service " + serviceName + " " + this);
                 if (log.isTraceEnabled()) {
                     log.trace("Listener task with Thread ID : " + Thread.currentThread().getId() +
                         " is stopping after processing : " + messageCount + " messages :: " +
@@ -765,6 +776,7 @@ public class ServiceTaskManager {
                             Thread.sleep(retryDuration);
                             if (getConnectedTaskCount() == concurrentConsumers) {
                                 connected = true;
+                                isOnExceptionError = false;
                                 log.info("Reconnection attempt: " + r + " for service: " + serviceName +
                                         " was successful!");
                             }
@@ -1012,6 +1024,18 @@ public class ServiceTaskManager {
 				}
 				throw new AxisJMSException(msg, e);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "MessageListenerTask{" +
+                    "workerState=" + workerState +
+                    ", idleExecutionCount=" + idleExecutionCount +
+                    ", idle=" + idle +
+                    ", connected=" + connected +
+                    ", listenerPaused=" + listenerPaused +
+                    ", connectionReceivedError=" + connectionReceivedError +
+                    '}';
         }
     }
 
@@ -1364,6 +1388,17 @@ public class ServiceTaskManager {
         }
     }
 
+    /**
+     * Method to set the maximum number of consumer retries when a consume error occurs.
+     *
+     * @param maxConsumerErrorRetryCount maximum number of consumer retries
+     */
+    public void setMaxConsumerErrorRetryCount(Integer maxConsumerErrorRetryCount) {
+        if (maxConsumerErrorRetryCount != null) {
+            this.maxConsumerErrorRetryCount = maxConsumerErrorRetryCount;
+        }
+    }
+
     public int getMaxMessagesPerTask() {
         return maxMessagesPerTask;
     }
@@ -1447,5 +1482,20 @@ public class ServiceTaskManager {
     
     public void setServiceTaskManagerState(int serviceTaskManagerState) {
         this.serviceTaskManagerState = serviceTaskManagerState;
+    }
+
+    /**
+     * Error recovery task to force recovery upon reaching {@link #maxConsumerErrorRetryCount}.
+     */
+    private static class ErrorRecoverTask implements Runnable {
+        private MessageListenerTask messageListenerTask;
+        public ErrorRecoverTask(MessageListenerTask messageListenerTask) {
+            this.messageListenerTask = messageListenerTask;
+        }
+        @Override
+        public void run() {
+            JMSException jmsException = new JMSException("FORCED CONNECTION RESTART", "FC_ERROR");
+            messageListenerTask.onException(jmsException);
+        }
     }
 }

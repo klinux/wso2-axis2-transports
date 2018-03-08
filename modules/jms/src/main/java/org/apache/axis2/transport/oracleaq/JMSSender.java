@@ -34,6 +34,7 @@ import org.apache.axis2.transport.http.HTTPConstants;
 import org.apache.axis2.transport.oracleaq.iowrappers.BytesMessageOutputStream;
 import org.apache.axis2.util.MessageProcessorSelector;
 import org.apache.commons.io.output.WriterOutputStream;
+import org.wso2.securevault.SecretResolver;
 
 import javax.activation.DataHandler;
 import javax.jms.*;
@@ -57,7 +58,7 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
 
     public static final String TRANSPORT_NAME = Constants.TRANSPORT_JMS;
 
-    private static Map<Transaction, ArrayList<JMSMessageSender>> JMSMessageSenderMap = new HashMap<>();
+    private static Map<Transaction, ArrayList<JMSMessageSender>> jmsMessageSenderMap = new HashMap<>();
     /** The JMS connection factory manager to be used when sending messages out */
     private JMSConnectionFactoryManager connFacManager;
 
@@ -72,7 +73,8 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
     @Override
     public void init(ConfigurationContext cfgCtx, TransportOutDescription transportOut) throws AxisFault {
         super.init(cfgCtx, transportOut);
-        connFacManager = new JMSConnectionFactoryManager(transportOut);
+        SecretResolver secretResolver = cfgCtx.getAxisConfiguration().getSecretResolver();
+        connFacManager = new JMSConnectionFactoryManager(transportOut, secretResolver);
         log.info("JMS Transport Sender initialized...");
     }
     
@@ -133,16 +135,19 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
             } else {
                 try {
                     messageSender = jmsOut.createJMSSender(msgCtx);
-                    Transaction transaction = (Transaction) msgCtx.getProperty(JMSConstants.JMS_XA_TRANSACTION);
-
-                    if (JMSMessageSenderMap.get(transaction) == null) {
-                        ArrayList list = new ArrayList();
-                        list.add(messageSender);
-                        JMSMessageSenderMap.put(transaction, list);
-                    } else {
-                        ArrayList list = JMSMessageSenderMap.get(transaction);
-                        list.add(messageSender);
-                        JMSMessageSenderMap.put(transaction, list);
+                    // MessageSender only needed to add if the scenario involved with XA transaction.
+                    // It can be identified by looking at target url's transport.jms.TransactionCommand parameter.
+                    if ((targetAddress.contains(JMSConstants.JMS_TRANSACTION_COMMAND))) {
+                        Transaction transaction = (Transaction) msgCtx.getProperty(JMSConstants.JMS_XA_TRANSACTION);
+                        if (jmsMessageSenderMap.get(transaction) == null) {
+                            ArrayList list = new ArrayList();
+                            list.add(messageSender);
+                            jmsMessageSenderMap.put(transaction, list);
+                        } else {
+                            ArrayList list = jmsMessageSenderMap.get(transaction);
+                            list.add(messageSender);
+                            jmsMessageSenderMap.put(transaction, list);
+                        }
                     }
 
                 } catch (JMSException e) {
@@ -236,7 +241,7 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
         // if this is a synchronous out-in, prepare to listen on the response destination
         String replyDestName;
 
-        if (waitForResponse) {
+        if (isWaitForResponseOrReplyDestination(waitForResponse, replyDestination)) { //check replyDestination for APIMANAGER-5892
 
             replyDestName = (String) msgCtx.getProperty(JMSConstants.JMS_REPLY_TO);
             if (replyDestName == null && jmsConnectionFactory != null) {
@@ -276,6 +281,7 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
                 } else if ("topic".equals(replyDestinationType)) {
                     tempDestination = messageSender.getSession().createTopic(replyDestName);
                 }
+                replyDestination = tempDestination;
                 message.setJMSReplyTo(tempDestination);
 
             } catch (JMSException e) {
@@ -319,7 +325,7 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
         }
 
         // if we are expecting a synchronous response back for the message sent out
-        if (waitForResponse) {
+        if (isWaitForResponseOrReplyDestination(waitForResponse, replyDestination)) {
             // TODO ********************************************************************************
             // TODO **** replace with asynchronous polling via a poller task to process this *******
             // information would be given. Then it should poll (until timeout) the
@@ -344,6 +350,10 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
                 msgCtx, correlationId, contentTypeProperty);
             // TODO ********************************************************************************
         }
+    }
+
+    protected boolean isWaitForResponseOrReplyDestination(boolean waitForResponse, Destination replyDestination) {
+        return waitForResponse || replyDestination != null;
     }
 
     /**
@@ -628,7 +638,7 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
     }
 
     private void commitXATransaction(Transaction transaction) throws AxisFault {
-        ArrayList<JMSMessageSender> msgSenderList = (ArrayList) JMSMessageSenderMap.get(transaction);
+        ArrayList<JMSMessageSender> msgSenderList = (ArrayList) jmsMessageSenderMap.get(transaction);
         if (msgSenderList.size() > 0) {
             for (JMSMessageSender msgSender : msgSenderList) {
                 try {
@@ -642,12 +652,12 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
                 }
 
             }
-            JMSMessageSenderMap.remove(transaction);
+            jmsMessageSenderMap.remove(transaction);
         }
     }
 
     private void rollbackXATransaction(Transaction transaction) throws AxisFault {
-        ArrayList<JMSMessageSender> msgSenderList = (ArrayList) JMSMessageSenderMap.get(transaction);
+        ArrayList<JMSMessageSender> msgSenderList = (ArrayList) jmsMessageSenderMap.get(transaction);
         if (msgSenderList.size() > 0) {
             for (JMSMessageSender msgSender : msgSenderList) {
                 try {
@@ -660,7 +670,7 @@ public class JMSSender extends AbstractTransportSender implements ManagementSupp
                     msgSender.closeOnException();
                 }
             }
-            JMSMessageSenderMap.remove(transaction);
+            jmsMessageSenderMap.remove(transaction);
         }
     }
 }

@@ -15,16 +15,16 @@
 */
 package org.apache.axis2.transport.oracleaq;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.naming.Context;
-
 import org.apache.axis2.AxisFault;
 import org.apache.axis2.description.Parameter;
 import org.apache.axis2.description.ParameterInclude;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.securevault.SecretResolver;
+
+import java.util.HashMap;
+import java.util.Map;
+import javax.naming.Context;
 
 /**
  * Class managing a set of {@link JMSConnectionFactory} objects.
@@ -39,8 +39,10 @@ public class JMSConnectionFactoryManager {
 
     /**
      * Construct a Connection factory manager for the JMS transport sender or receiver
-     * @param trpInDesc
+     *
+     * @param trpInDesc the transport description for JMS
      */
+    @Deprecated
     public JMSConnectionFactoryManager(ParameterInclude trpInDesc) {
         loadConnectionFactoryDefinitions(trpInDesc);
     }
@@ -51,6 +53,7 @@ public class JMSConnectionFactoryManager {
      *
      * @param trpDesc the transport description for JMS
      */
+    @Deprecated
     private void loadConnectionFactoryDefinitions(ParameterInclude trpDesc) {
 
         for (Parameter p : trpDesc.getParameters()) {
@@ -59,6 +62,34 @@ public class JMSConnectionFactoryManager {
                 connectionFactories.put(jmsConFactory.getName(), jmsConFactory);
             } catch (AxisJMSException e) {
                 log.error("Error setting up connection factory : " + p.getName(), e);
+            }
+        }
+    }
+
+    /**
+     * Construct a Connection factory manager for the JMS transport sender or receiver.
+     *
+     * @param trpInDesc the transport description for JMS
+     * @param secretResolver the SecretResolver to use to resolve secrets such as passwords
+     */
+    public JMSConnectionFactoryManager(ParameterInclude trpInDesc, SecretResolver secretResolver) {
+        loadConnectionFactoryDefinitions(trpInDesc, secretResolver);
+    }
+
+    /**
+     * Create JMSConnectionFactory instances for the definitions in the transport configuration,
+     * and add these into our collection of connectionFactories map keyed by name.
+     *
+     * @param trpDesc the transport description for JMS
+     * @param secretResolver the SecretResolver to use to resolve secrets such as passwords
+     */
+    private void loadConnectionFactoryDefinitions(ParameterInclude trpDesc, SecretResolver secretResolver) {
+        for (Parameter parameter : trpDesc.getParameters()) {
+            try {
+                JMSConnectionFactory jmsConFactory = new JMSConnectionFactory(parameter, secretResolver);
+                connectionFactories.put(jmsConFactory.getName(), jmsConFactory);
+            } catch (AxisJMSException e) {
+                log.error("Error setting up connection factory : " + parameter.getName(), e);
             }
         }
     }
