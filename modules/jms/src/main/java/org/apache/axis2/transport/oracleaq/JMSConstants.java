@@ -112,7 +112,7 @@ public class JMSConstants {
 	 * Duration in milliseconds to try reconnecting when the MQ is
 	 * down(shutdown)
 	 */
-	public static final String PARAM_RECONNECT_INTERVAL = "transport.jms.ReconnectInterval";
+	public static final String PARAM_RECONNECT_INTERVAL = "transport.jms.ReconnectInterval";     
     /**
      * The Parameter indicating the expected content type for messages received by the service.
      */
@@ -176,10 +176,6 @@ public class JMSConstants {
      * Maximum retries on consume error before delay kicks in.
      */
     public static final String PARAM_MAX_CONSUME_RETRY_BEFORE_DELAY = "transport.jms.MaxConsumeErrorRetriesBeforeDelay";
-    /**
-     * Maximum retries on consumer error.
-     */
-    public static final String PARAM_MAX_CONSUME_RETRY_COUNT = "transport.jms.MaxConsumeErrorRetryCount";
     /**
      *The number of concurrent consumers to be created to poll for messages for this service
      * For Topics, this should be ONE, to prevent receipt of multiple copies of the same message
@@ -254,14 +250,6 @@ public class JMSConstants {
      * Value 2 - javax.jms.DeliveryMode.PERSISTENT
      */
     public static final String JMS_DELIVERY_MODE = "JMS_DELIVERY_MODE";
-
-    /**
-     * Acceptable String values (PERSISTENT and NON_PERSISTENT) for JMS_DELIVERY_MODE in axis2 scope
-     */
-    public static final String JMS_PERSISTENT_DELIVERY_MODE = "PERSISTENT";
-    public static final String JMS_NON_PERSISTENT_DELIVERY_MODE = "NON_PERSISTENT";
-
-
     /**
      * A MessageContext property or client Option indicating the JMS destination to use on a Send
      */
@@ -385,11 +373,6 @@ public class JMSConstants {
 
     public static final String JMS_XA_TRANSACTION_MANAGER = "distributedTxMgr";
 
-    /**
-    * Will be used identify transactionality.
-    */
-    public static final String JMS_TRANSACTION_COMMAND = "transport.jms.TransactionCommand";
-
     public static final String JMS_SPEC_VERSION_1_1 = "1.1";
 
     public static final String JMS_SPEC_VERSION_2_0 = "2.0";
@@ -407,9 +390,4 @@ public class JMSConstants {
      * Parameter for jndi security credentials in jms configs of axis2.xml
      */
     public static final String PARAM_NAMING_SECURITY_CREDENTIALS = "java.naming.security.credentials";
-
-    /**
-     * Qualified name for SecureVault aliases.
-     */
-    public static final QName ALIAS_QNAME = new QName("http://org.wso2.securevault/configuration", "secretAlias");
 }
